@@ -111,15 +111,13 @@ lazy val commonSettings = ScriptedPlugin.scriptedSettings ++ List(
   runScripted := runScriptedTask.value,
   scriptedLaunchOpts += "-Dplugin.version=" + version.value,
   scriptedBufferLog := false,
-  crossSbtVersions := List("0.13.16", "1.0.2"),
+  crossSbtVersions := List("0.13.17", "1.0.2"),
   scalaVersion := {
     (sbtBinaryVersion in pluginCrossBuild).value match {
-      case "0.13" => "2.10.6"
+      case "0.13" => "2.10.7"
       case _ => "2.12.3"
     }
-  },
-  // fixed in https://github.com/sbt/sbt/pull/3397 (for sbt 0.13.17)
-  sbtBinaryVersion in update := (sbtBinaryVersion in pluginCrossBuild).value
+  }
 )
 
 lazy val noPublishSettings =
