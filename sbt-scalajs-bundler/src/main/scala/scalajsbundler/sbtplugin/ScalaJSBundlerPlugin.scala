@@ -2,14 +2,10 @@ package scalajsbundler.sbtplugin
 
 import java.util.concurrent.atomic.AtomicReference
 
-import org.scalajs.core.tools.io.FileVirtualJSFile
-import org.scalajs.core.tools.jsdep.ResolvedJSDependency
-import org.scalajs.core.tools.linker.backend.ModuleKind
-import org.scalajs.jsenv.ComJSEnv
+import org.scalajs.jsenv.nodejs.ComRun
 import org.scalajs.jsenv.nodejs.NodeJSEnv
 import org.scalajs.sbtplugin.Loggers.sbtLogger2ToolsLogger
 import org.scalajs.sbtplugin.ScalaJSPlugin.autoImport._
-import org.scalajs.sbtplugin.ScalaJSPluginInternal._
 import org.scalajs.sbtplugin.{ScalaJSPlugin, ScalaJSPluginInternal, Stage}
 import org.scalajs.testadapter.TestAdapter
 import sbt.Keys._
@@ -501,7 +497,7 @@ object ScalaJSBundlerPlugin extends AutoPlugin {
     useYarn := false,
 
     ensureModuleKindIsCommonJSModule := {
-      if (scalaJSModuleKind.value == ModuleKind.CommonJSModule) true
+      if (scalaJSLinkerConfig.value.moduleKind == ModuleKind.CommonJSModule) true
       else sys.error(s"scalaJSModuleKind must be set to ModuleKind.CommonJSModule in projects where ScalaJSBundler plugin is enabled")
     },
 
@@ -567,7 +563,6 @@ object ScalaJSBundlerPlugin extends AutoPlugin {
       (crossTarget in npmUpdate).value,
       scalaJSBundlerPackageJson.value.file,
       useYarn.value,
-      scalaJSNativeLibraries.value.data,
       streams.value,
       npmExtraArgs.value,
       yarnExtraArgs.value),
@@ -703,7 +698,7 @@ object ScalaJSBundlerPlugin extends AutoPlugin {
         // Pretend that we are not using a CommonJS module if jsdom is involved, otherwise that
         // would be incompatible with the way jsdom loads scripts
         val (moduleKind, moduleIdentifier) = {
-          val withoutDom = (scalaJSModuleKind.value, scalaJSModuleIdentifier.value)
+          val withoutDom = (scalaJSLinkerConfig.value.moduleKind, scalaJSModuleIdentifier.value)
 
           if ((resolvedJSEnv in fastOptJS).value.name.contains("JSDOM")) (ModuleKind.NoModule, None)
           else withoutDom
@@ -734,7 +729,7 @@ object ScalaJSBundlerPlugin extends AutoPlugin {
       crossTarget in stageTask := (crossTarget in npmUpdate).value,
 
       // Override Scala.js’ relativeSourceMaps in case we have to emit source maps in the webpack task, because it does not work with absolute source maps
-      relativeSourceMaps in stageTask := (webpackEmitSourceMaps in stageTask).value,
+      scalaJSLinkerConfig in stageTask := (scalaJSLinkerConfig in stageTask).value.withRelativizeSourceMapBase(Some(new URI("."))),
 
       scalaJSBundlerWebpackConfig in stageTask := BundlerFile.WebpackConfig(
         WebpackTasks.entry(stageTask).value,
@@ -752,7 +747,7 @@ object ScalaJSBundlerPlugin extends AutoPlugin {
         }
       }.value,
 
-      webpackEmitSourceMaps in stageTask := (emitSourceMaps in stageTask).value,
+      webpackEmitSourceMaps in stageTask := (scalaJSLinkerConfig in stageTask).value.sourceMap,
 
       webpackMonitoredFiles in stageTask := {
         val generatedWebpackConfigFile = (scalaJSBundlerWebpackConfig in stageTask).value

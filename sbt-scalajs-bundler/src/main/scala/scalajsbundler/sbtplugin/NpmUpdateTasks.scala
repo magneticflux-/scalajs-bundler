@@ -1,6 +1,5 @@
 package scalajsbundler.sbtplugin
 
-import org.scalajs.core.tools.io.{FileVirtualJSFile, RelativeVirtualFile, VirtualJSFile}
 import scalajsbundler.ExternalCommand
 import sbt._
 
