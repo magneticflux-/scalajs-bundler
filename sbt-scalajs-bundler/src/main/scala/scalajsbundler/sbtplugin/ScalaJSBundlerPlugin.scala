@@ -649,7 +649,7 @@ object ScalaJSBundlerPlugin extends AutoPlugin {
               assert(ensureModuleKindIsCommonJSModule.value)
               val sjsOutput = fastOptJS.value.data
               // If jsdom is going to be used, then we should bundle the test module into a file that exports the tests to the global namespace
-              if ((scalaJSRequestsDOM in fastOptJS).value) Def.task {
+              if ((resolvedJSEnv in fastOptJS).value.name.contains("JSDOM")) Def.task {
                 val logger = streams.value.log
                 val targetDir = npmUpdate.value
                 val sjsOutputName = sjsOutput.name.stripSuffix(".js")
@@ -705,7 +705,7 @@ object ScalaJSBundlerPlugin extends AutoPlugin {
         val (moduleKind, moduleIdentifier) = {
           val withoutDom = (scalaJSModuleKind.value, scalaJSModuleIdentifier.value)
 
-          if ((scalaJSRequestsDOM in fastOptJS).value) (ModuleKind.NoModule, None)
+          if ((resolvedJSEnv in fastOptJS).value.name.contains("JSDOM")) (ModuleKind.NoModule, None)
           else withoutDom
         }
 

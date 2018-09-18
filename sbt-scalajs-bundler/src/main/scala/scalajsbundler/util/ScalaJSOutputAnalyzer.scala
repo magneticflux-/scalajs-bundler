@@ -49,7 +49,7 @@ object ScalaJSOutputAnalyzer {
             s"linkerConfig.moduleKind was ${linkerConfig.moduleKind}")
     val symbolRequirements = {
       val backend = new BasicLinkerBackend(linkerConfig.semantics,
-                                           linkerConfig.outputMode,
+                                           linkerConfig.esFeatures,
                                            linkerConfig.moduleKind,
                                            linkerConfig.sourceMap,
                                            LinkerBackend.Config())
